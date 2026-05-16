@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GeoNova — Matematiğin İnşa Ettiği Şehir</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=DM+Sans:wght@300;400;500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cyan:#00e5ff;--blue:#1565ff;--teal:#00bfa5;
+  --dark:#030812;--dark2:#07111f;--dark3:#0d1a2e;--card:#0a1628;
+  --border:rgba(0,229,255,0.15);--text:#e0f0ff;--muted:#7a9ab8;
+  --glow:0 0 20px rgba(0,229,255,0.25);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--dark);color:var(--text);overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--dark)}
+::-webkit-scrollbar-thumb{background:var(--cyan);border-radius:2px}
+
+.stars{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 20% 50%,rgba(21,101,255,0.08) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 20%,rgba(0,229,255,0.06) 0%,transparent 50%),var(--dark);
+}
+.stars::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%,rgba(255,255,255,.6) 0%,transparent 100%),
+    radial-gradient(1px 1px at 30% 45%,rgba(255,255,255,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 55% 25%,rgba(255,255,255,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 75% 60%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 15% 75%,rgba(0,229,255,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 65% 85%,rgba(255,255,255,.4) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 85% 40%,rgba(21,101,255,.6) 0%,transparent 100%);
+}
+.grid-overlay{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);
+  background-size:50px 50px;
+}
+
+/* STUDENT BAND */
+.student-band{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  background:linear-gradient(90deg,rgba(0,229,255,0.12),rgba(21,101,255,0.10),rgba(0,229,255,0.12));
+  border-bottom:1px solid rgba(0,229,255,0.35);
+  padding:.45rem 2rem;
+  display:flex;align-items:center;justify-content:center;gap:2.5rem;
+  backdrop-filter:blur(12px);
+}
+.sb-item{
+  display:flex;align-items:center;gap:.55rem;
+  font-family:'Space Mono',monospace;font-size:.72rem;
+  color:var(--text);letter-spacing:.5px;
+}
+.sb-label{color:rgba(0,229,255,.55);font-size:.65rem;letter-spacing:1px;margin-right:.2rem}
+.sb-val{color:#fff;font-weight:500}
+.sb-dot{width:3px;height:3px;border-radius:50%;background:rgba(0,229,255,.4)}
+.sb-icon{width:14px;height:14px;flex-shrink:0;opacity:.8}
+
+/* NAV */
+nav{
+  position:fixed;top:2.1rem;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 2.5rem;background:rgba(3,8,18,.88);
+  backdrop-filter:blur(20px);border-bottom:1px solid var(--border);
+}
+.nav-logo{font-family:'Orbitron',sans-serif;font-weight:800;font-size:1.2rem;color:var(--cyan);letter-spacing:2px;text-shadow:var(--glow)}
+.nav-logo span{color:var(--text)}
+.nav-links{display:flex;gap:2rem;list-style:none}
+.nav-links a{color:var(--muted);font-size:.85rem;text-decoration:none;letter-spacing:.5px;transition:color .2s;font-weight:500}
+.nav-links a:hover{color:var(--cyan)}
+
+/* HERO */
+#hero{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:8.5rem 2rem 4rem;position:relative;z-index:1}
+.hero-eyebrow{font-family:'Space Mono',monospace;font-size:.75rem;color:var(--cyan);letter-spacing:3px;margin-bottom:1.5rem;opacity:0;animation:fadeUp .8s ease .2s forwards}
+.hero-title{font-family:'Orbitron',sans-serif;font-size:clamp(2.4rem,6vw,5rem);font-weight:900;line-height:1.1;margin-bottom:1rem;opacity:0;animation:fadeUp .8s ease .4s forwards}
+.geo{color:transparent;-webkit-text-stroke:1px var(--cyan)}
+.nova{color:var(--cyan);text-shadow:0 0 40px rgba(0,229,255,.5)}
+.hero-sub{font-size:1.1rem;color:var(--muted);max-width:600px;line-height:1.7;margin-bottom:2.5rem;opacity:0;animation:fadeUp .8s ease .6s forwards}
+.hero-buttons{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;opacity:0;animation:fadeUp .8s ease .8s forwards}
+.btn-primary{padding:.75rem 2rem;border-radius:4px;background:var(--cyan);color:#000;font-weight:600;font-family:'Orbitron',sans-serif;font-size:.8rem;letter-spacing:1px;text-decoration:none;transition:all .2s}
+.btn-primary:hover{background:#fff;box-shadow:0 0 30px rgba(0,229,255,.5);transform:translateY(-2px)}
+.btn-outline{padding:.75rem 2rem;border-radius:4px;background:transparent;color:var(--cyan);font-size:.85rem;text-decoration:none;border:1px solid var(--border);transition:all .2s}
+.btn-outline:hover{border-color:var(--cyan);background:rgba(0,229,255,.05)}
+.city-sil{margin-top:4rem;width:100%;max-width:800px;opacity:0;animation:fadeUp 1s ease 1s forwards}
+.city-sil svg{width:100%;height:auto}
+
+/* SECTIONS */
+section{position:relative;z-index:1;padding:6rem 2rem}
+.container{max-width:1100px;margin:0 auto}
+.section-label{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--cyan);letter-spacing:3px;margin-bottom:.75rem;display:block}
+.section-title{font-family:'Orbitron',sans-serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:800;margin-bottom:1rem;line-height:1.25}
+.section-desc{color:var(--muted);max-width:650px;line-height:1.8;margin-bottom:3rem;font-size:.95rem}
+.cyan{color:var(--cyan)}
+.section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.3}
+
+/* ABOUT */
+#hakkinda{background:var(--dark2)}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}
+.about-text p{color:var(--muted);line-height:1.9;margin-bottom:1rem;font-size:.95rem}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2rem}
+.stat-card{background:var(--dark3);border:1px solid var(--border);border-radius:8px;padding:1.25rem;text-align:center}
+.stat-num{font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:800;color:var(--cyan);text-shadow:var(--glow)}
+.stat-label{font-size:.75rem;color:var(--muted);margin-top:.25rem;letter-spacing:.5px}
+.formula-box{background:var(--dark3);border:1px solid var(--border);border-radius:12px;padding:2rem;font-family:'Space Mono',monospace;font-size:.79rem;color:var(--cyan);line-height:2.1}
+.formula-box .f-label{color:var(--muted);font-size:.7rem;margin-bottom:.75rem;display:block}
+
+/* ZONES */
+#bolge{background:var(--dark)}
+.map-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:2rem}
+.zone-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;transition:all .3s;position:relative;overflow:hidden}
+.zone-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:0;transition:opacity .3s}
+.zone-card:hover{border-color:rgba(0,229,255,.4);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.zone-card:hover::before{opacity:1}
+.zone-icon{font-size:2rem;margin-bottom:1rem}
+.zone-name{font-family:'Orbitron',sans-serif;font-size:.8rem;font-weight:700;color:var(--cyan);margin-bottom:.5rem;letter-spacing:.5px}
+.zone-desc{color:var(--muted);font-size:.84rem;line-height:1.6}
+.zone-shapes{margin-top:.75rem;display:flex;flex-wrap:wrap;gap:.4rem}
+.shape-tag{font-size:.7rem;padding:.25rem .6rem;border-radius:20px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);color:var(--cyan);font-family:'Space Mono',monospace}
+
+/* BUILDINGS */
+#binalar{background:var(--dark2)}
+.buildings-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem}
+.building-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;transition:all .3s;position:relative;overflow:hidden}
+.building-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--blue),var(--cyan),transparent);opacity:0;transition:opacity .3s}
+.building-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.building-card:hover::after{opacity:1}
+.building-shape{font-family:'Orbitron',sans-serif;font-size:.62rem;color:var(--cyan);letter-spacing:1.5px;margin-bottom:.5rem;padding:.3rem .8rem;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);border-radius:20px;display:inline-block}
+.building-name{font-family:'Orbitron',sans-serif;font-size:.95rem;font-weight:700;margin:.5rem 0;line-height:1.3}
+.building-example{color:var(--muted);font-size:.79rem;margin-bottom:.75rem}
+.building-formula{font-family:'Space Mono',monospace;font-size:.74rem;color:var(--teal);background:rgba(0,191,165,.08);padding:.5rem .75rem;border-radius:6px;margin-bottom:.75rem;border-left:2px solid var(--teal)}
+.building-desc{color:var(--muted);font-size:.82rem;line-height:1.6}
+
+/* MATH */
+#matematik{background:var(--dark3)}
+.math-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+.math-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem}
+.math-card h3{font-family:'Orbitron',sans-serif;font-size:.82rem;color:var(--cyan);margin-bottom:1rem;letter-spacing:.3px}
+.math-card p{color:var(--muted);font-size:.87rem;line-height:1.8}
+.math-formula{font-family:'Space Mono',monospace;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.15);border-radius:8px;padding:1rem;color:var(--cyan);font-size:.77rem;margin-top:1rem;line-height:1.9}
+
+/* GALLERY */
+#galeri{background:var(--dark)}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.gallery-item{aspect-ratio:1;background:var(--card);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all .3s;text-align:center;padding:1rem}
+.gallery-item:hover{border-color:var(--cyan);transform:scale(1.02)}
+.gi-icon{font-size:2.5rem;margin-bottom:.5rem}
+.gi-label{font-family:'Orbitron',sans-serif;font-size:.65rem;color:var(--cyan);letter-spacing:1px;margin-bottom:.25rem}
+.gi-formula{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted)}
+
+/* CONCLUSION */
+#sonuc{background:var(--dark2);text-align:center}
+.conclusion-quote{font-family:'Orbitron',sans-serif;font-size:clamp(1.1rem,2.5vw,1.7rem);font-weight:700;max-width:800px;margin:0 auto 2rem;line-height:1.55;color:var(--text)}
+.conclusion-quote .hl{color:var(--cyan)}
+.conclusion-body{color:var(--muted);max-width:650px;margin:0 auto 1.5rem;line-height:1.9;font-size:.95rem}
+
+/* STUDENT */
+#ogrenci{background:var(--dark3)}
+.student-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem;max-width:600px;margin:0 auto;text-align:center}
+.student-card h3{font-family:'Orbitron',sans-serif;color:var(--cyan);font-size:.88rem;margin-bottom:2rem;letter-spacing:1.5px}
+.srow{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding:.75rem 0}
+.srow-label{color:var(--muted);font-size:.82rem}
+.srow-val{font-family:'Orbitron',sans-serif;font-size:.8rem;color:var(--text);font-weight:600}
+.qr-box-wrap{margin-top:2rem;background:var(--dark3);border:2px dashed rgba(0,229,255,.2);border-radius:12px;padding:2rem;color:var(--muted);font-size:.8rem}
+.qr-box{width:80px;height:80px;margin:0 auto 1rem;background:repeating-linear-gradient(45deg,rgba(0,229,255,.1) 0,rgba(0,229,255,.1) 2px,transparent 0,transparent 50%);background-size:6px 6px;border:2px solid rgba(0,229,255,.3);border-radius:8px}
+
+footer{background:var(--dark);border-top:1px solid var(--border);padding:2rem;text-align:center;color:var(--muted);font-size:.8rem;position:relative;z-index:1}
+.footer-logo{font-family:'Orbitron',sans-serif;color:var(--cyan);font-weight:800;font-size:1rem;margin-bottom:.5rem}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:none}
+
+@media(max-width:700px){
+  .about-grid,.math-grid{grid-template-columns:1fr}
+  .map-grid{grid-template-columns:1fr 1fr}
+  .gallery-grid{grid-template-columns:1fr 1fr}
+  .stat-row{grid-template-columns:1fr 1fr}
+  nav{padding:1rem 1.25rem;top:1.8rem}
+  .nav-links{display:none}
+  section{padding:4rem 1.25rem}
+  .student-band{gap:1rem;padding:.4rem 1rem;flex-wrap:wrap;justify-content:flex-start}
+  .sb-dot{display:none}
+  .sb-item{font-size:.65rem}
+}
+</style>
+</head>
+<body>
+<div class="stars"></div>
+<div class="grid-overlay"></div>
+
+<!-- STUDENT BAND -->
+<div class="student-band">
+  <div class="sb-item">
+    <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span class="sb-label">ÖĞRENCİ</span><span class="sb-val">Hamza Şahin</span>
+  </div>
+  <div class="sb-dot"></div>
+  <div class="sb-item">
+    <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    <span class="sb-label">DERS</span><span class="sb-val">Matematik Projesi</span>
+  </div>
+  <div class="sb-dot"></div>
+  <div class="sb-item">
+    <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+    <span class="sb-label">SINIF</span><span class="sb-val">7 / A</span>
+  </div>
+  <div class="sb-dot"></div>
+  <div class="sb-item">
+    <svg class="sb-icon" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span class="sb-label">YIL</span><span class="sb-val">2025 — 2026</span>
+  </div>
+</div>
+
+<nav>
+  <div class="nav-logo"><span>GEO</span>NOVA</div>
+  <ul class="nav-links">
+    <li><a href="#hakkinda">Proje</a></li>
+    <li><a href="#bolge">Bölgeler</a></li>
+    <li><a href="#binalar">Binalar</a></li>
+    <li><a href="#matematik">Matematik</a></li>
+    <li><a href="#ogrenci">Bilgiler</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-eyebrow">// MATEMATİK × MİMARİ × GEOMETRİ</div>
+  <h1 class="hero-title"><span class="geo">GEO</span><span class="nova">NOVA</span><br>MATEMATİĞİN<br>İNŞA ETTİĞİ ŞEHİR</h1>
+  <p class="hero-sub">Her binası, yolu, köprüsü ve parkı geometrik matematiğin kesin yasalarıyla tasarlanmış geleceğin kurgusal şehri.</p>
+  <div class="hero-buttons">
+    <a href="#hakkinda" class="btn-primary">ŞEHRİ KEŞFET</a>
+    <a href="#binalar" class="btn-outline">Binalara Bak</a>
+  </div>
+  <div class="city-sil">
+    <svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 0 20px rgba(0,229,255,0.3))">
+      <line x1="0" y1="185" x2="800" y2="185" stroke="rgba(0,229,255,0.3)" stroke-width="1"/>
+      <rect x="20" y="155" width="30" height="30" fill="none" stroke="rgba(0,229,255,0.4)" stroke-width="1"/>
+      <rect x="55" y="140" width="30" height="45" fill="none" stroke="rgba(0,229,255,0.35)" stroke-width="1"/>
+      <rect x="100" y="100" width="28" height="85" rx="14" fill="none" stroke="rgba(0,229,255,0.5)" stroke-width="1.5"/>
+      <ellipse cx="114" cy="100" rx="14" ry="4" fill="none" stroke="rgba(0,229,255,0.5)" stroke-width="1"/>
+      <polygon points="155,185 185,185 170,130" fill="none" stroke="rgba(0,229,255,0.6)" stroke-width="1.5"/>
+      <rect x="195" y="80" width="35" height="105" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.5)" stroke-width="1.5"/>
+      <line x1="198" y1="95" x2="227" y2="95" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"/>
+      <line x1="198" y1="110" x2="227" y2="110" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"/>
+      <line x1="198" y1="125" x2="227" y2="125" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"/>
+      <line x1="198" y1="140" x2="227" y2="140" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"/>
+      <line x1="198" y1="155" x2="227" y2="155" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"/>
+      <line x1="198" y1="170" x2="227" y2="170" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"/>
+      <rect x="340" y="130" width="120" height="55" fill="rgba(0,229,255,0.06)" stroke="rgba(0,229,255,0.6)" stroke-width="1.5"/>
+      <ellipse cx="400" cy="130" rx="60" ry="35" fill="rgba(0,229,255,0.05)" stroke="rgba(0,229,255,0.7)" stroke-width="1.5"/>
+      <line x1="400" y1="95" x2="400" y2="65" stroke="rgba(0,229,255,0.6)" stroke-width="1"/>
+      <circle cx="400" cy="62" r="3" fill="#00e5ff"><animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/></circle>
+      <polygon points="265,185 285,185 295,155 285,125 265,125 255,155" fill="none" stroke="rgba(0,229,255,0.5)" stroke-width="1.5"/>
+      <line x1="275" y1="125" x2="275" y2="90" stroke="rgba(0,229,255,0.5)" stroke-width="1"/>
+      <polygon points="275,90 285,65 265,65" fill="none" stroke="rgba(0,229,255,0.5)" stroke-width="1"/>
+      <polygon points="510,185 540,185 525,115" fill="none" stroke="rgba(0,229,255,0.55)" stroke-width="1.5"/>
+      <rect x="555" y="115" width="25" height="70" fill="none" stroke="rgba(0,229,255,0.4)" stroke-width="1"/>
+      <rect x="583" y="100" width="25" height="85" fill="rgba(0,229,255,0.03)" stroke="rgba(0,229,255,0.5)" stroke-width="1"/>
+      <rect x="611" y="130" width="25" height="55" fill="none" stroke="rgba(0,229,255,0.35)" stroke-width="1"/>
+      <circle cx="680" cy="155" r="30" fill="rgba(0,229,255,0.04)" stroke="rgba(0,229,255,0.5)" stroke-width="1.5"/>
+      <line x1="650" y1="155" x2="710" y2="155" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"/>
+      <line x1="680" y1="125" x2="680" y2="185" stroke="rgba(0,229,255,0.2)" stroke-width="0.5"/>
+      <line x1="0" y1="185" x2="800" y2="185" stroke="rgba(0,229,255,0.6)" stroke-width="1.5" style="filter:blur(2px)"/>
+    </svg>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- HAKKINDA -->
+<section id="hakkinda">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <span class="section-label">// 01 — PROJE HAKKINDA</span>
+        <h2 class="section-title"><span class="cyan">Geometri</span>'nin Mimarlığa Dönüştüğü Yer</h2>
+        <p>GeoNova, tamamen matematiksel ilkeler temel alınarak tasarlanmış kurgusal bir gelecek şehridir. Her yapı tasarlanırken önce şu soru sorulmuştur: <em>Bu amaç için en verimli geometrik şekil hangisidir?</em></p>
+        <p>Silindir kuleler rüzgara dayanıklıdır çünkü köşeleri yoktur. Üçgen köprüler yük taşır çünkü üçgenler biçimlerini değiştiremez. Altıgen parklar alanı verimli kullanır çünkü altıgenler yüzeyi mükemmel şekilde kaplar. GeoNova'da matematik soyut bir teori değil — gerçek bir plandır.</p>
+        <p>Bu proje; geometrik cisimler, yüzey alanı, hacim, simetri, açılar ve mozaikleme kavramlarını gerçek dünya kentsel tasarımı üzerinden keşfeder.</p>
+        <div class="stat-row">
+          <div class="stat-card"><div class="stat-num">14</div><div class="stat-label">Bina</div></div>
+          <div class="stat-card"><div class="stat-num">7</div><div class="stat-label">Şehir Bölgesi</div></div>
+          <div class="stat-card"><div class="stat-num">13</div><div class="stat-label">Geometrik Şekil</div></div>
+        </div>
+      </div>
+      <div class="formula-box reveal">
+        <span class="f-label">// TEMEL FORMÜLLER</span>
+        Silindir Hacmi:  V = πr²h<br>
+        Küre Hacmi:      V = 4/3 · πr³<br>
+        Koni Hacmi:      V = 1/3 · πr²h<br>
+        Piramit Hacmi:   V = 1/3 · B · h<br>
+        Prizma Hacmi:    V = B · h<br><br>
+        Silindir YA:     2πr² + 2πrh<br>
+        Küre YA:         4πr²<br>
+        Koni YA:         πrl<br>
+        Piramit YA:      B + 1/2 · P · l<br><br>
+        Altıgen Alan:    (3√3/2) · a²<br>
+        Daire Alanı:     A = πr²<br>
+        Üçgen Açıları:   α + β + γ = 180°
+      </div>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- BÖLGELER -->
+<section id="bolge">
+  <div class="container">
+    <span class="section-label">// 02 — ŞEHİR BÖLGELERİ</span>
+    <h2 class="section-title"><span class="cyan">GeoNova</span>'nın Yedi Bölgesi</h2>
+    <p class="section-desc">GeoNova, her biri amacına en uygun geometrik özelliklere göre tasarlanmış yedi özel bölgeye ayrılmaktadır.</p>
+    <div class="map-grid">
+      <div class="zone-card reveal">
+        <div class="zone-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="zone-name">Konut Bölgesi</div>
+        <div class="zone-desc">Maksimum iç alan ve verimli kat planları için tasarlanmış konut kuleleri ve apartman blokları.</div>
+        <div class="zone-shapes"><span class="shape-tag">Silindir</span><span class="shape-tag">Dikd. Prizma</span><span class="shape-tag">Küp</span></div>
+      </div>
+      <div class="zone-card reveal">
+        <div class="zone-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
+        <div class="zone-name">Eğitim Bölgesi</div>
+        <div class="zone-desc">Güçlü üçgen çatı yapıları ve prizma biçimli derslikler ile okul ve kütüphaneler.</div>
+        <div class="zone-shapes"><span class="shape-tag">Üçgen Prizma</span><span class="shape-tag">Küp</span><span class="shape-tag">Dikdörtgen</span></div>
+      </div>
+      <div class="zone-card reveal">
+        <div class="zone-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+        <div class="zone-name">Bilim ve Teknoloji</div>
+        <div class="zone-desc">Araştırma laboratuvarları, inovasyon kuleleri ve altıgen konferans merkezi.</div>
+        <div class="zone-shapes"><span class="shape-tag">Altıgen Prizma</span><span class="shape-tag">Koni</span><span class="shape-tag">Küre</span></div>
+      </div>
+      <div class="zone-card reveal">
+        <div class="zone-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <div class="zone-name">Enerji Merkezi</div>
+        <div class="zone-desc">Yarıküre reaktör kubbesi, silindir rüzgar kuleleri ve güneş piramit dizileri.</div>
+        <div class="zone-shapes"><span class="shape-tag">Yarıküre</span><span class="shape-tag">Piramit</span><span class="shape-tag">Silindir</span></div>
+      </div>
+      <div class="zone-card reveal">
+        <div class="zone-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+        <div class="zone-name">Ulaşım Bölgesi</div>
+        <div class="zone-desc">Üçgen kafes köprüler, dairesel kavşaklar ve dikdörtgen transit merkezi.</div>
+        <div class="zone-shapes"><span class="shape-tag">Üçgen</span><span class="shape-tag">Daire</span><span class="shape-tag">Dikdörtgen</span></div>
+      </div>
+      <div class="zone-card reveal">
+        <div class="zone-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12M12 12C12 12 7 9 7 5a5 5 0 0 1 10 0c0 4-5 7-5 7z"/><path d="M5 12c-1.5 1-2 2.5-2 4 0 3 4 4 9 4s9-1 9-4c0-1.5-.5-3-2-4"/></svg></div>
+        <div class="zone-name">Park ve Doğa</div>
+        <div class="zone-desc">Altıgen bahçe döşemeleri, dairesel çeşmeler ve spiral yürüyüş yolları.</div>
+        <div class="zone-shapes"><span class="shape-tag">Altıgen</span><span class="shape-tag">Daire</span><span class="shape-tag">Spiral</span></div>
+      </div>
+      <div class="zone-card reveal">
+        <div class="zone-icon"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 22 22 22"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="12" y1="19" x2="12.01" y2="19"/></svg></div>
+        <div class="zone-name">Anıt Alanı</div>
+        <div class="zone-desc">Şehrin simgesi: dairesel meydan üzerinde yükselen GeoNova Piramidi ve küre heykeller.</div>
+        <div class="zone-shapes"><span class="shape-tag">Piramit</span><span class="shape-tag">Küre</span><span class="shape-tag">Daire</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- BİNALAR -->
+<section id="binalar">
+  <div class="container">
+    <span class="section-label">// 03 — GEOMETRİK BİNALAR</span>
+    <h2 class="section-title">Her Yapı, <span class="cyan">Matematiksel</span> Bir Gerekçeyle</h2>
+    <p class="section-desc">GeoNova'daki her bina belirli bir geometrik sebeple seçilmiştir. İşte şehrin temel yapıları.</p>
+    <div class="buildings-grid">
+      <div class="building-card reveal">
+        <span class="building-shape">SİLİNDİR</span>
+        <div class="building-name">GeoNova Kulesi</div>
+        <div class="building-example">Gerçek örnek: Burj Khalifa, tahıl siloları</div>
+        <div class="building-formula">V = πr²h | YA = 2πr² + 2πrh</div>
+        <div class="building-desc">Köşesiz yapısı sayesinde rüzgar silindir etrafında eşit dağılır. Dikdörtgen binalara göre yatay kuvvetlere çok daha dayanıklıdır.</div>
+      </div>
+      <div class="building-card reveal">
+        <span class="building-shape">ÜÇGEN PRİZMA</span>
+        <div class="building-name">Prizma Okulu</div>
+        <div class="building-example">Gerçek örnek: Louvre Piramidi, çadır çatılar</div>
+        <div class="building-formula">V = (1/2 · t · h) · uzunluk</div>
+        <div class="building-desc">Üçgen kesit yağmur suyunu verimli şekilde akıtır. Yüksek tavanlı etkileyici iç mekânlar oluşturur.</div>
+      </div>
+      <div class="building-card reveal">
+        <span class="building-shape">KÜP</span>
+        <div class="building-name">Küp Apartmanları</div>
+        <div class="building-example">Gerçek örnek: Habitat 67, Montréal</div>
+        <div class="building-formula">V = a³ | YA = 6a²</div>
+        <div class="building-desc">6 yüzünün tamamı özdeş karelerdir. Yüzey alanı-hacim oranı enerji verimliliği için optimize edilebilir.</div>
+      </div>
+      <div class="building-card reveal">
+        <span class="building-shape">ALTIĞEN PRİZMA</span>
+        <div class="building-name">Kristal Laboratuvar</div>
+        <div class="building-example">Gerçek örnek: Bal peteği, bazalt sütunlar</div>
+        <div class="building-formula">A = (3√3/2)·a² | İç açı = 120°</div>
+        <div class="building-desc">Altıgen binalar aralarında boşluk kalmadan yan yana dizilir. 120°'lik iç açılar stresi eşit dağıtır.</div>
+      </div>
+      <div class="building-card reveal">
+        <span class="building-shape">KARE PİRAMİT</span>
+        <div class="building-name">Apex Anıtı</div>
+        <div class="building-example">Gerçek örnek: Büyük Mısır Piramidi, Louvre</div>
+        <div class="building-formula">V = 1/3 · a² · h | YA = a² + 2al</div>
+        <div class="building-desc">Geniş taban ve birleşen tepe olağanüstü bir denge sağlar. Hacim, eşdeğer prizmanın tam üçte birine eşittir.</div>
+      </div>
+      <div class="building-card reveal">
+        <span class="building-shape">YARIKÜRE</span>
+        <div class="building-name">Kubbe Arena</div>
+        <div class="building-example">Gerçek örnek: Eden Projesi, iglolar</div>
+        <div class="building-formula">V = 2/3·πr³ | YA = 2πr²</div>
+        <div class="building-desc">Belirli bir eğrisel yüzey alanı için en büyük hacmi kapsar. İç destek sütununa gerek yoktur — kemer kendini taşır.</div>
+      </div>
+      <div class="building-card reveal">
+        <span class="building-shape">KONİ</span>
+        <div class="building-name">Koni Kulesi</div>
+        <div class="building-example">Gerçek örnek: Kilise kuleleri, tepee çadırları</div>
+        <div class="building-formula">V = 1/3·πr²h | Yan YA = πrl</div>
+        <div class="building-desc">Konik yapı rüzgarı yukarı yönlendirir ve yağmuru eğik yüzey boyunca aşağı akıtır. l = √(r² + h²)</div>
+      </div>
+      <div class="building-card reveal">
+        <span class="building-shape">KÜRE</span>
+        <div class="building-name">Küre Gözlemevi</div>
+        <div class="building-example">Gerçek örnek: Epcot Center, planetaryumlar</div>
+        <div class="building-formula">V = 4/3·πr³ | YA = 4πr²</div>
+        <div class="building-desc">En az malzemeyle en fazla iç mekân: küre, belirli bir hacim için en küçük yüzey alanına sahip şekildir.</div>
+      </div>
+      <div class="building-card reveal">
+        <span class="building-shape">DİKDÖRTGENLER PRİZMASI</span>
+        <div class="building-name">Merkezi AVM</div>
+        <div class="building-example">Gerçek örnek: Dünyadaki çoğu gökdelen</div>
+        <div class="building-formula">V = u·g·y | YA = 2(ug+uy+gy)</div>
+        <div class="building-desc">Odaları bölmek için en verimli şekil. Her kat planı aynıdır; inşaatı sistematik ve ekonomik kılar.</div>
+      </div>
+      <div class="building-card reveal">
+        <span class="building-shape">ÜÇGEN (KAFES)</span>
+        <div class="building-name">Üçgen Köprüsü</div>
+        <div class="building-example">Gerçek örnek: Eyfel Kulesi tabanı, çatı kirişleri</div>
+        <div class="building-formula">α + β + γ = 180° | Rijit yapı</div>
+        <div class="building-desc">Kenar uzunlukları değişmeden biçimi değiştirilemez tek çokgendir. Kafes kirişler mühendislikte en güçlü çerçevedir.</div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- MATEMATİK -->
+<section id="matematik">
+  <div class="container">
+    <span class="section-label">// 04 — GEONOVA'NIN ARKASINDAKİ MATEMATİK</span>
+    <h2 class="section-title">Bir Şehri İnşa Eden <span class="cyan">Altı İlke</span></h2>
+    <p class="section-desc">Temel matematiksel kavramların kentsel tasarıma nasıl uygulandığını keşfedin.</p>
+    <div class="math-grid">
+      <div class="math-card reveal">
+        <h3><svg style="vertical-align:-4px;margin-right:6px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="5" rx="7" ry="2.5"/><line x1="5" y1="5" x2="5" y2="19"/><line x1="19" y1="5" x2="19" y2="19"/><ellipse cx="12" cy="19" rx="7" ry="2.5"/></svg>Silindirler Neden İdeal Kule Şeklidir?</h3>
+        <p>Silindirin köşesi yoktur; rüzgar yükleri dairesel kesit etrafında sürekli dağılır. Belirli bir çevre için daire, tüm diğer şekillerden daha fazla alan kapsar. Silindir kuleler aynı duvar uzunluğu için dikdörtgen binalardan daha fazla iç kat alanı sunar.</p>
+        <div class="math-formula">Çevre: C = 2πr<br>Daire alanı: A = πr²<br>Aynı çevreli kare → DAHA AZ alan</div>
+      </div>
+      <div class="math-card reveal">
+        <h3><svg style="vertical-align:-4px;margin-right:6px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round"><polygon points="12,3 22,20 2,20"/></svg>Üçgenler Neden Güçlüdür?</h3>
+        <p>Kare çerçeveye kuvvet uygulandığında paralelkenara dönüşerek çöker. Üçgen çerçeve buna tamamen direnir. Üçgeni deforme etmek için bir kenarın uzunluğunu değiştirmek gerekir. Bu yüzden tüm köprüler, vinçler ve çatı kirişleri üçgen kafes kullanır.</p>
+        <div class="math-formula">Açılar toplamı: α + β + γ = 180°<br>Pisagor: a² + b² = c²<br>Üçgen = tek rijit çokgen</div>
+      </div>
+      <div class="math-card reveal">
+        <h3><svg style="vertical-align:-4px;margin-right:6px" width="18" height="18" viewBox="0 0 28 28" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round"><polygon points="14,3 21.5,7.5 21.5,16.5 14,21 6.5,16.5 6.5,7.5"/></svg>Altıgenler Neden Verimlidir?</h3>
+        <p>Bir düzlemi boşluksuz kaplayan üç düzgün çokgenden altıgen en yüksek alan/çevre oranına sahiptir. Altıgen parklar, aynı çevre uzunluğuyla kare parklardan daha geniş alan kapsar. Arılar da bal peteklerini bu yüzden altıgen yapar.</p>
+        <div class="math-formula">İç açı: 120°<br>Alan: A = (3√3/2) · a²<br>Düzlemi %0 boşlukla kaplar</div>
+      </div>
+      <div class="math-card reveal">
+        <h3><svg style="vertical-align:-4px;margin-right:6px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12" stroke-opacity=".5"/><path d="M12 3 a9 4.5 0 0 1 0 18 a9 4.5 0 0 1 0-18"/></svg>Şehir Planlamasında Simetri</h3>
+        <p>GeoNova 4'lü dönme simetrisine sahiptir — harita 90° döndürüldüğünde aynı görünür. Merkezi anıt 4 eksen boyunca yansıma simetrisine sahiptir. Mimarideki simetri; eşit yük dağılımı, tüm yönlerde eşit malzeme kullanımı ve öngörülebilir yapısal davranış sağlar.</p>
+        <div class="math-formula">4'lü dönme simetrisi<br>4 yansıma ekseni<br>Simetrik yapı = dengeli kuvvetler</div>
+      </div>
+      <div class="math-card reveal">
+        <h3><svg style="vertical-align:-4px;margin-right:6px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="5" width="14" height="14" rx="1"/><path d="M16 5l6 3v14l-6-3"/></svg>Binalarda Alan ve Hacim</h3>
+        <p>Yüzey alanı binanın ne kadar malzeme gerektirdiğini gösterir. Hacim kullanılabilir iç mekânı belirler. Verimli mimarinin hedefi: yüzey alanını minimumda tutarken hacmi maksimuma çıkarmak. Tüm şekiller arasında küre bu oranı en iyi sağlar.</p>
+        <div class="math-formula">Küre: YA/V = 3/r (r büyüdükçe azalır)<br>Küp: YA/V = 6/a<br>Büyük ölçekte küre kazanır</div>
+      </div>
+      <div class="math-card reveal">
+        <h3><svg style="vertical-align:-4px;margin-right:6px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><polyline points="8 7 3 12 8 17"/><polyline points="16 7 21 12 16 17"/></svg>Yollar ve Yapılarda Açılar</h3>
+        <p>GeoNova yol ağı kesin açılar kullanır: 90° ana ızgara (kolay yönelim), 45° çapraz bulvarlar (kısa yollar) ve 60° altıgen park bağlantıları. Yolların kesişme açısı trafik akışını, bina cephelerindeki açılar ise güneş ışığı alımını doğrudan etkiler.</p>
+        <div class="math-formula">90° ızgara → en kısa dikdörtgen yollar<br>45° köşegen → √2 ≈ 1,41× daha doğrudan<br>Eğrilik: κ = 1/r</div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- GALERİ -->
+<section id="galeri">
+  <div class="container">
+    <span class="section-label">// 05 — ŞEKİL GALERİSİ</span>
+    <h2 class="section-title"><span class="cyan">GeoNova</span>'da Kullanılan Geometrik Cisimler</h2>
+    <p class="section-desc">Şehirde kullanılan her geometrik cisme ait temel formül.</p>
+    <div class="gallery-grid">
+      <div class="gallery-item reveal">
+        <div class="gi-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="3" x2="21" y2="21" stroke-opacity=".3"/></svg></div>
+        <div class="gi-label">KÜP</div><div class="gi-formula">V = a³</div>
+      </div>
+      <div class="gallery-item reveal">
+        <div class="gi-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.4"><rect x="2" y="5" width="14" height="14" rx="1"/><path d="M16 5l6 3v14l-6-3" stroke-opacity=".7"/><path d="M16 19l-14 0" stroke-opacity=".3"/></svg></div>
+        <div class="gi-label">DİKD. PRİZMASI</div><div class="gi-formula">V = u·g·y</div>
+      </div>
+      <div class="gallery-item reveal">
+        <div class="gi-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.4"><ellipse cx="12" cy="5" rx="7" ry="2.5"/><line x1="5" y1="5" x2="5" y2="19"/><line x1="19" y1="5" x2="19" y2="19"/><ellipse cx="12" cy="19" rx="7" ry="2.5"/></svg></div>
+        <div class="gi-label">SİLİNDİR</div><div class="gi-formula">V = πr²h</div>
+      </div>
+      <div class="gallery-item reveal">
+        <div class="gi-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.4"><line x1="12" y1="2" x2="5" y2="20"/><line x1="12" y1="2" x2="19" y2="20"/><ellipse cx="12" cy="20" rx="7" ry="2"/></svg></div>
+        <div class="gi-label">KONİ</div><div class="gi-formula">V = ⅓πr²h</div>
+      </div>
+      <div class="gallery-item reveal">
+        <div class="gi-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="9" ry="3.5"/><line x1="12" y1="3" x2="12" y2="21" stroke-opacity=".3"/></svg></div>
+        <div class="gi-label">KÜRE</div><div class="gi-formula">V = 4/3·πr³</div>
+      </div>
+      <div class="gallery-item reveal">
+        <div class="gi-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.4"><path d="M3 19 A9 9 0 0 1 21 19"/><ellipse cx="12" cy="19" rx="9" ry="3"/><line x1="3" y1="19" x2="21" y2="19" stroke-opacity=".3"/></svg></div>
+        <div class="gi-label">YARIKÜRE</div><div class="gi-formula">V = 2/3·πr³</div>
+      </div>
+      <div class="gallery-item reveal">
+        <div class="gi-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.4"><polygon points="12,3 22,20 2,20"/><line x1="2" y1="20" x2="22" y2="20"/></svg></div>
+        <div class="gi-label">ÜÇGEN PRİZMA</div><div class="gi-formula">V = ½·t·h·l</div>
+      </div>
+      <div class="gallery-item reveal">
+        <div class="gi-icon"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#00e5ff" stroke-width="1.4"><polygon points="12,2 22,22 2,22"/><rect x="2" y="22" width="20" height=".5" fill="#00e5ff"/></svg></div>
+        <div class="gi-label">PİRAMİT</div><div class="gi-formula">V = ⅓·B·h</div>
+      </div>
+      <div class="gallery-item reveal">
+        <div class="gi-icon"><svg width="44" height="44" viewBox="0 0 28 28" fill="none" stroke="#00e5ff" stroke-width="1.4"><polygon points="14,3 21.5,7.5 21.5,16.5 14,21 6.5,16.5 6.5,7.5"/></svg></div>
+        <div class="gi-label">ALTIĞEN PRİZMA</div><div class="gi-formula">A = (3√3/2)·a²</div>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- SONUÇ -->
+<section id="sonuc">
+  <div class="container">
+    <span class="section-label">// 06 — SONUÇ</span>
+    <div class="conclusion-quote reveal">"Matematik öğrenilen bir ders değil — <span class="hl">evrenin yazıldığı dildir.</span>"</div>
+    <p class="conclusion-body">GeoNova, geometri, hacim, simetri ve açıların bir ders kitabında sıkışıp kalmış soyut kavramlar olmadığını kanıtlar. Bunlar; mimarların, mühendislerin ve şehir plancılarının her gün kullandığı görünmez kurallardır. Gerçek bir şehrin köprülerine, kulelerine, kubbelerine ve yollarına baktığınızda aslında uygulamalı matematiğe bakıyorsunuzdur.</p>
+    <p class="conclusion-body">GeoNova'daki her bina matematiksel bir nedene dayanılarak yerleştirilmiştir. Bu da GeoNova'yı yalnızca bir model şehir değil — <strong style="color:var(--cyan)">matematiğin dünyayı inşa ettiğinin kanıtı</strong> yapar.</p>
+    <a href="#hero" class="btn-outline" style="margin-top:2rem;display:inline-block">↑ Başa Dön</a>
+  </div>
+</section>
+<div class="section-divider"></div>
+
+<!-- ÖĞRENCİ -->
+<section id="ogrenci">
+  <div class="container">
+    <span class="section-label">// 07 — PROJE BİLGİLERİ</span>
+    <h2 class="section-title" style="text-align:center;margin-bottom:2rem">Proje <span class="cyan">Kimlik Kartı</span></h2>
+    <div class="student-card reveal">
+      <h3>// GEONOVA — ÖĞRENCİ PROJE KAYDI</h3>
+      <div class="srow"><span class="srow-label">ÖĞRENCİ ADI SOYADI</span><span class="srow-val">Hamza Şahin</span></div>
+      <div class="srow"><span class="srow-label">SINIF / ŞUBE</span><span class="srow-val">7 / A</span></div>
+      <div class="srow"><span class="srow-label">DERS</span><span class="srow-val">Matematik Projesi</span></div>
+      <div class="srow"><span class="srow-label">PROJE ADI</span><span class="srow-val">Matematik Geometri Şehri</span></div>
+      <div class="srow"><span class="srow-label">ÖĞRETMEN</span><span class="srow-val">[ Öğretmen Adı ]</span></div>
+      <div class="srow"><span class="srow-label">OKUL</span><span class="srow-val">[ Okul Adı ]</span></div>
+      <div class="srow" style="border-bottom:none"><span class="srow-label">EĞİTİM YILI</span><span class="srow-val">2025 — 2026</span></div>
+      <div class="qr-box-wrap">
+        <div class="qr-box"></div>
+        <div>Web sitesini ziyaret etmek için QR kodu tarayın</div>
+        <div style="margin-top:.5rem;font-family:'Space Mono',monospace;font-size:.65rem;color:rgba(0,229,255,.35)">[ GitHub Pages bağlantınızı buraya yapıştırın ]</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">GEONOVA</div>
+  <p>Matematik Geometri Şehri Projesi &nbsp;·&nbsp; Hazırlayan: <strong style="color:var(--cyan)">Hamza Şahin</strong></p>
+  <p style="margin-top:.5rem;font-family:'Space Mono',monospace;font-size:.65rem;color:rgba(0,229,255,.18)">π · r² · h · ⅓ · 4πr² · 180° · a³ · 2πr · √3·a²/2</p>
+</footer>
+
+<script>
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold:0.1});
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+document.querySelectorAll('.buildings-grid,.map-grid,.math-grid,.gallery-grid').forEach(g => {
+  g.querySelectorAll('.reveal').forEach((c,i) => c.style.transitionDelay = (i*.08)+'s');
+});
+const secs = document.querySelectorAll('section[id]');
+const links = document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll',()=>{
+  let cur='';
+  secs.forEach(s=>{if(window.scrollY>=s.offsetTop-200)cur=s.id});
+  links.forEach(l=>{l.style.color=l.getAttribute('href')==='#'+cur?'var(--cyan)':'';});
+});
+</script>
+</body>
+</html>
